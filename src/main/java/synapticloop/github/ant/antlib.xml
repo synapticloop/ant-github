@@ -1,0 +1,3 @@
+<antlib xmlns:antcontrib="antlib:github">
+	<typedef name="get-release" classname="synapticloop.github.ant.GetReleaseTask" />
+</antlib>

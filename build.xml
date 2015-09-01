@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     1 Sep 2015 16:03:19                                                        
+
+     ant-github
+     ====================================================================== -->
+<project name="ant-github" default="dist" xmlns:github="antlib:github">
+	<taskdef uri="antlib:github" resource="synapticloop/github/ant/antlib.xml" classpath="lib/util/ant-github.jar" />
+
+	<property name="build.dir" value="dist" />
+	<property name="dist.dir" value="dist" />
+
+	<target name="clean" description="clean the output directories">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+	</target>
+
+	<target name="init" description="initialise the directories">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${dist.dir}" />
+	</target>
+	
+	<path id="lib.path.compile">
+		<!-- 
+		  Do a fileset so that it doesn't fall over if the runtime/compile directory 
+		  doesn't exist
+		  -->
+		<fileset dir="lib/runtime">
+			<include name="*.jar"/>
+		</fileset>
+		<fileset dir="lib/compile">
+			<include name="*.jar"/>
+		</fileset>
+	</path>
+
+	<target name="compile" description="compile the code">
+		<javac srcdir="src/main/java" destdir="${build.dir}" classpathref="lib.path.compile" debug="on" includeantruntime="false" />
+	</target>
+
+	<target name="jar" description="jar up the files">
+		<jar destfile="dist/${ant.project.name}.jar">
+			<fileset dir="${build.dir}">
+				<include name="**/*.*"/>
+			</fileset>
+			<fileset dir="src/main/java/">
+				<include name="**/*.xml"/>
+			</fileset>
+			<zipgroupfileset dir="lib/compile" includes="JSON-java.jar" />
+		</jar>
+		<copy file="${dist.dir}/${ant.project.name}.jar" todir="lib/util/" />
+	</target>
+
+	<target name="dist" depends="clean,init,compile,jar" description="build the distributable" />
+
+	<target name="download-dependencies">
+		<github:get-release owner="synapticloop" repo="JSON-java" asset="JSON-java.jar" out="lib/compile/JSON-java.jar" />
+	</target>
+</project>
