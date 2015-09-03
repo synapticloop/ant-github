@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,11 +25,11 @@ public class GetReleaseTask extends Task {
 		checkParameter("asset", asset);
 
 		if(null == version || version.trim().length() == 0) {
-			getProject().log("No version set, using version 'latest'");
+			getProject().log(this, "No version set, using version 'latest'", Project.MSG_INFO);
 			version = "latest";
 		}
 
-		//checkParameter("out", out);
+		checkParameter("out", out);
 
 		String url = "https://api.github.com/repos/" + owner + "/" + repo + "/releases/" + version;
 
@@ -58,13 +59,14 @@ public class GetReleaseTask extends Task {
 				throw new BuildException("Could not find a downloadable asset for '" + asset + "'.");
 			}
 		} catch (IOException ioex) {
-			throw new BuildException("could not determine releases from '" + url + "'.", ioex);
+			throw new BuildException("Could not determine releases from '" + url + "'.", ioex);
 		}
 		super.execute();
 	}
 
-	private static void checkParameter(String name, String parameter) throws BuildException {
+	private void checkParameter(String name, String parameter) throws BuildException {
 		if(null == parameter || parameter.trim().length() == 0) {
+			getProject().log(this, "Task parameter '" + name + "', was not provided, failing.", Project.MSG_ERR);
 			throw new BuildException("Task parameter '" + name + "', was not provided, failing.");
 		}
 	}
