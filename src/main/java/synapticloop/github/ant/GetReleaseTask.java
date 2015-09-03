@@ -34,6 +34,9 @@ public class GetReleaseTask extends Task {
 		if(null == version || version.trim().length() == 0) {
 			getProject().log(this, "No version set, using version 'latest'", Project.MSG_INFO);
 			version = "latest";
+		} else {
+			// we need to get the version from the tagged release
+			version = "tags/" + version;
 		}
 
 		checkParameter("outDir", outDir);
@@ -77,6 +80,9 @@ public class GetReleaseTask extends Task {
 				}
 
 				File outputFile = new File(outputDirectory.getPath() + File.separatorChar+ asset);
+				if(outputFile.exists()) {
+					logAndThrow("File '" + outputFile.getName() + "' already exists, please delete this file or use the overwrite=\"true\" attribute on this task.");
+				}
 				HttpHelper.writeUrlToFile(downloadableAssetUrl, outputFile);
 				getProject().log(this, "Successfully downloaded release " + owner + "/" + repo + "/" + version + "/" + asset + " -> " + outputFile.getPath(), Project.MSG_INFO);
 			} else {

@@ -29,7 +29,7 @@
 	  -->
 	
 	<target name="download-dependencies">
-		<github:get-release owner="synapticloop" repo="ant-github" asset="ant-github.jar" out="lib/util/ant-github.jar" />
+		<github:get-release owner="synapticloop" repo="ant-github" asset="ant-github.jar" outDir="lib/util/" />
 	</target>
 </project>
 	
