@@ -12,6 +12,8 @@ import org.json.JSONObject;
 import synapticloop.github.ant.util.HttpHelper;
 
 public class GetReleaseTask extends Task {
+	private static final String BROWSER_DOWNLOAD_URL = "browser_download_url";
+
 	// the owner of the github reporitories
 	private String owner = null;
 	// the repository name
@@ -51,7 +53,7 @@ public class GetReleaseTask extends Task {
 					String name = assetObject.getString("name");
 					if(name.equals(asset)) {
 						// this is the one we want
-						downloadableAssetUrl = assetObject.getString("browser_download_url");
+						downloadableAssetUrl = assetObject.getString(BROWSER_DOWNLOAD_URL);
 						break;
 					}
 				}
@@ -95,8 +97,8 @@ public class GetReleaseTask extends Task {
 	private void logAndThrow(String message) throws BuildException {
 		getProject().log(this, message, Project.MSG_ERR);
 		throw new BuildException(message);
-
 	}
+
 	public void setOwner(String owner) { this.owner = owner; }
 	public void setRepo(String repo) { this.repo = repo; }
 	public void setVersion(String version) { this.version = version; }
