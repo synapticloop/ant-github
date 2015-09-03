@@ -1,3 +1,4 @@
 build/
 build-eclipse/
 dist/
+lib/util/ant-github.jar
