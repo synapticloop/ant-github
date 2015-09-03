@@ -1,17 +1,20 @@
 package synapticloop.github.ant;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 
 public class Main {
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		GetReleaseTask getReleaseTask = new GetReleaseTask();
-		getReleaseTask.setOwner("synapticloop");
-		getReleaseTask.setRepo("JSON-java");
-		getReleaseTask.setVersion("latest");
-		getReleaseTask.setOut("lib/runtime/JSON-java.jar");
-		getReleaseTask.setAsset("JSON-java.jar");
-		getReleaseTask.execute();
+	public static void main(String[] args) throws IOException {
+		InputStream resourceAsStream = Main.class.getResourceAsStream("/build-ant-github.xml");
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(resourceAsStream));
+		String line = null;
+		while((line = bufferedReader.readLine()) != null) {
+			System.out.println(line);
+		}
 	}
 
 }
