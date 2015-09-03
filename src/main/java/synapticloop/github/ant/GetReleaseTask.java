@@ -24,6 +24,8 @@ public class GetReleaseTask extends Task {
 	private String asset = null;
 	// the output directory
 	private String outDir = null;
+	// whether to over-write the file
+	private boolean overwrite = false;
 
 	@Override
 	public void execute() throws BuildException {
@@ -80,9 +82,10 @@ public class GetReleaseTask extends Task {
 				}
 
 				File outputFile = new File(outputDirectory.getPath() + File.separatorChar+ asset);
-				if(outputFile.exists()) {
+				if(outputFile.exists() && !overwrite) {
 					logAndThrow("File '" + outputFile.getName() + "' already exists, please delete this file or use the overwrite=\"true\" attribute on this task.");
 				}
+
 				HttpHelper.writeUrlToFile(downloadableAssetUrl, outputFile);
 				getProject().log(this, "Successfully downloaded release " + owner + "/" + repo + "/" + version + "/" + asset + " -> " + outputFile.getPath(), Project.MSG_INFO);
 			} else {
@@ -110,5 +113,5 @@ public class GetReleaseTask extends Task {
 	public void setVersion(String version) { this.version = version; }
 	public void setOutDir(String outDir) { this.outDir = outDir; }
 	public void setAsset(String asset) { this.asset = asset; }
-
+	public void setOverwrite(boolean overwrite) { this.overwrite = overwrite; }
 }
