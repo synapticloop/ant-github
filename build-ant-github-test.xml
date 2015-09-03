@@ -20,7 +20,7 @@
 
 <project name="build-ant-github" xmlns:github="antlib:github" default="download-dependencies">
 	<!-- you should change the classpath to wherever you have installed the ant-github.jar file -->
-	<taskdef uri="antlib:github" resource="synapticloop/github/ant/antlib.xml" classpath="lib/util/ant-github.jar" />
+	<taskdef uri="antlib:github" resource="synapticloop/github/ant/antlib.xml" classpath="dist/ant-github.jar" />
 
 	<!--
 	  At this point the following will download the release from the github repo below.
@@ -29,7 +29,7 @@
 	  -->
 	
 	<target name="download-dependencies">
-		<github:get-release owner="synapticloop" repo="ant-github" asset="ant-github.jar" out="lib/util/ant-github.jar" />
+		<github:get-release owner="synapticloop" repo="ant-github" asset="ant-github.jar" outDir="lib/util/" />
 	</target>
 </project>
 	

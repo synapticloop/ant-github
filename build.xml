@@ -3,14 +3,15 @@
      ant-github
      ====================================================================== -->
 <project name="ant-github" default="dist" xmlns:github="antlib:github">
-	<taskdef uri="antlib:github" resource="synapticloop/github/ant/antlib.xml" classpath="lib/util/ant-github.jar" />
+	<taskdef uri="antlib:github" resource="synapticloop/github/ant/antlib.xml" classpath="dist/ant-github.jar" />
 
-	<property name="build.dir" value="dist" />
+	<property name="build.dir" value="build" />
 	<property name="dist.dir" value="dist" />
 
 	<target name="clean" description="clean the output directories">
 		<delete dir="${build.dir}" />
 		<delete dir="${dist.dir}" />
+		<delete dir="lib/util/" />
 	</target>
 
 	<target name="init" description="initialise the directories">
@@ -45,7 +46,6 @@
 			</fileset>
 			<zipgroupfileset dir="lib/compile" includes="JSON-java.jar" />
 		</jar>
-		<copy file="${dist.dir}/${ant.project.name}.jar" todir="lib/util/" />
 	</target>
 
 	<target name="dist" depends="clean,init,compile,jar" description="build the distributable" />

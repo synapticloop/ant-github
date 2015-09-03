@@ -12,11 +12,16 @@ import org.json.JSONObject;
 import synapticloop.github.ant.util.HttpHelper;
 
 public class GetReleaseTask extends Task {
+	// the owner of the github reporitories
 	private String owner = null;
+	// the repository name
 	private String repo = null;
+	// the version - if not set - will default to 'latest'
 	private String version = null;
+	// the name of the asset that you want to download
 	private String asset = null;
-	private String out = null;
+	// the output directory
+	private String outDir = null;
 
 	@Override
 	public void execute() throws BuildException {
@@ -29,7 +34,7 @@ public class GetReleaseTask extends Task {
 			version = "latest";
 		}
 
-		checkParameter("out", out);
+		checkParameter("outDir", outDir);
 
 		String url = "https://api.github.com/repos/" + owner + "/" + repo + "/releases/" + version;
 
@@ -53,28 +58,49 @@ public class GetReleaseTask extends Task {
 			}
 
 			if(null != downloadableAssetUrl) {
-				File file = new File(out);
-				HttpHelper.writeUrlToFile(downloadableAssetUrl, file);
+				File outputDirectory = new File(outDir);
+				// ensure that the directory exists
+				if(!outputDirectory.exists()) {
+					// create the directories
+					boolean mkdirs = outputDirectory.mkdirs();
+					if(mkdirs) {
+						getProject().log(this, "Created missing output directory of '" + outputDirectory.getPath() + "'.", Project.MSG_INFO);
+					} else {
+						logAndThrow("Could not create missing output directory of '" + outputDirectory.getPath() + "'.");
+					}
+				}
+
+				if(outputDirectory.exists() && outputDirectory.isFile()) {
+					logAndThrow("Output directory '" + outputDirectory.getPath() + "', exists, but is not a directory, please remove this file.");
+				}
+
+				File outputFile = new File(outputDirectory.getPath() + File.separatorChar+ asset);
+				HttpHelper.writeUrlToFile(downloadableAssetUrl, outputFile);
+				getProject().log(this, "Successfully downloaded release " + owner + "/" + repo + "/" + version + "/" + asset + " -> " + outputFile.getPath(), Project.MSG_INFO);
 			} else {
 				throw new BuildException("Could not find a downloadable asset for '" + asset + "'.");
 			}
 		} catch (IOException ioex) {
+			ioex.printStackTrace();
 			throw new BuildException("Could not determine releases from '" + url + "'.", ioex);
 		}
-		super.execute();
 	}
 
 	private void checkParameter(String name, String parameter) throws BuildException {
 		if(null == parameter || parameter.trim().length() == 0) {
-			getProject().log(this, "Task parameter '" + name + "', was not provided, failing.", Project.MSG_ERR);
-			throw new BuildException("Task parameter '" + name + "', was not provided, failing.");
+			logAndThrow("Task parameter '" + name + "', was not provided, failing...");
 		}
 	}
 
+	private void logAndThrow(String message) throws BuildException {
+		getProject().log(this, message, Project.MSG_ERR);
+		throw new BuildException(message);
+
+	}
 	public void setOwner(String owner) { this.owner = owner; }
 	public void setRepo(String repo) { this.repo = repo; }
 	public void setVersion(String version) { this.version = version; }
-	public void setOut(String out) { this.out = out; }
+	public void setOutDir(String outDir) { this.outDir = outDir; }
 	public void setAsset(String asset) { this.asset = asset; }
 
 }
