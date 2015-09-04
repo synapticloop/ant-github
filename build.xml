@@ -37,7 +37,7 @@
 	</target>
 
 	<target name="jar" description="jar up the files">
-		<jar destfile="dist/${ant.project.name}.jar">
+		<jar destfile="dist/${ant.project.name}.jar" manifest="src/main/META-INF/MANIFEST.MF">
 			<fileset dir="${build.dir}">
 				<include name="**/*.*"/>
 			</fileset>

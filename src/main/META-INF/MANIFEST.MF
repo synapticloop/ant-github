@@ -1,0 +1,1 @@
+Main-Class: synapticloop.github.ant.Main
