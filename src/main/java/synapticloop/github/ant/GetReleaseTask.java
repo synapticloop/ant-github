@@ -27,6 +27,9 @@ public class GetReleaseTask extends Task {
 	// whether to over-write the file
 	private boolean overwrite = false;
 
+	// the shortname for logging
+	private String details = null;
+
 	@Override
 	public void execute() throws BuildException {
 		checkParameter("owner", owner);
@@ -34,12 +37,25 @@ public class GetReleaseTask extends Task {
 		checkParameter("asset", asset);
 
 		if(null == version || version.trim().length() == 0) {
-			getProject().log(this, "No version set, using version 'latest'", Project.MSG_INFO);
+			getProject().log(this, details + " No version set, using version 'latest'", Project.MSG_INFO);
 			version = "latest";
 		} else {
 			// we need to get the version from the tagged release
 			version = "tags/" + version;
 		}
+
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("[ ");
+		stringBuilder.append(owner);
+		stringBuilder.append("/");
+		stringBuilder.append(repo);
+		stringBuilder.append(" ");
+		stringBuilder.append(asset);
+		stringBuilder.append("@");
+		stringBuilder.append(version);
+		stringBuilder.append(" ] ");
+
+		details = stringBuilder.toString();
 
 		checkParameter("outDir", outDir);
 
@@ -71,7 +87,7 @@ public class GetReleaseTask extends Task {
 					// create the directories
 					boolean mkdirs = outputDirectory.mkdirs();
 					if(mkdirs) {
-						getProject().log(this, "Created missing output directory of '" + outputDirectory.getPath() + "'.", Project.MSG_INFO);
+						getProject().log(this, details + "Created missing output directory of '" + outputDirectory.getPath() + "'.", Project.MSG_INFO);
 					} else {
 						logAndThrow("Could not create missing output directory of '" + outputDirectory.getPath() + "'.");
 					}
@@ -87,7 +103,7 @@ public class GetReleaseTask extends Task {
 				}
 
 				HttpHelper.writeUrlToFile(downloadableAssetUrl, outputFile);
-				getProject().log(this, "Successfully downloaded release " + owner + "/" + repo + "/" + version + "/" + asset + " -> " + outputFile.getPath(), Project.MSG_INFO);
+				getProject().log(this, details + "Successfully downloaded release " + owner + "/" + repo + "/" + version + "/" + asset + " -> " + outputFile.getPath(), Project.MSG_INFO);
 			} else {
 				throw new BuildException("Could not find a downloadable asset for '" + asset + "'.");
 			}
@@ -104,7 +120,7 @@ public class GetReleaseTask extends Task {
 	}
 
 	private void logAndThrow(String message) throws BuildException {
-		getProject().log(this, message, Project.MSG_ERR);
+		getProject().log(this, details +  message, Project.MSG_ERR);
 		throw new BuildException(message);
 	}
 

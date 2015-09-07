@@ -58,6 +58,8 @@ public class Main {
 		fileWriter.flush();
 		fileWriter.close();
 		System.out.println("Example build file '" + BUILD_ANT_GITHUB_XML + "' written to the file system.");
+		System.out.println("\n You can execute this ant build file by:");
+		System.out.println("\tant -f " + BUILD_ANT_GITHUB_XML + "\n");
 
 	}
 
