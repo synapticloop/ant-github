@@ -47,10 +47,12 @@ public class Main {
 			return;
 		}
 
+		String lineSeparator = System.getProperty("line.separator");
 		FileWriter fileWriter = new FileWriter(file);
 		String line = null;
 		while((line = bufferedReader.readLine()) != null) {
 			fileWriter.write(line);
+			fileWriter.write(lineSeparator);
 		}
 
 		fileWriter.flush();
