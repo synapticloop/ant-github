@@ -19,7 +19,7 @@ public class GetReleaseTask extends Task {
 	// the repository name
 	private String repo = null;
 	// the version - if not set - will default to 'latest'
-	private String version = "latest";
+	private String version = "latest;
 	// the name of the asset that you want to download
 	private String asset = null;
 	// the output directory
@@ -36,6 +36,14 @@ public class GetReleaseTask extends Task {
 		checkParameter("repo", repo);
 		checkParameter("asset", asset);
 
+		if(null == version || version.trim().length() == 0) {
+			getProject().log(this, "[ " + owner + "/" + repo + " " + asset + " ] No version set, using version 'latest'", Project.MSG_INFO);
+			version = "latest";
+		} else {
+			// we need to get the version from the tagged release
+			version = "tags/" + version;
+		}
+
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("[ ");
 		stringBuilder.append(owner);
@@ -49,12 +57,6 @@ public class GetReleaseTask extends Task {
 
 		details = stringBuilder.toString();
 
-		if(null == version || version.trim().length() == 0) {
-			getProject().log(this, details + " No version set, using version 'latest'", Project.MSG_INFO);
-		} else {
-			// we need to get the version from the tagged release
-			version = "tags/" + version;
-		}
 
 		checkParameter("outDir", outDir);
 
