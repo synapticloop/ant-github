@@ -19,7 +19,7 @@ public class GetReleaseTask extends Task {
 	// the repository name
 	private String repo = null;
 	// the version - if not set - will default to 'latest'
-	private String version = "latest;
+	private String version = null;
 	// the name of the asset that you want to download
 	private String asset = null;
 	// the output directory
