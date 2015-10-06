@@ -81,11 +81,11 @@ public class GetReleaseTask extends Task {
 						boolean thisRelease = version.endsWith(releaseNumber);
 
 						if(i < maxPrintReleases) {
-							extracted(isFirstAsset, releaseNumber, isDraft, isPreRelease, thisRelease);
+							logVersionInfo(isFirstAsset, releaseNumber, isDraft, isPreRelease, thisRelease);
 						} else if(thisRelease) {
 							getProject().log(this, "    ...", Project.MSG_ERR);
 
-							extracted(isFirstAsset, releaseNumber, isDraft, isPreRelease, thisRelease);
+							logVersionInfo(isFirstAsset, releaseNumber, isDraft, isPreRelease, thisRelease);
 						}
 
 
@@ -102,7 +102,7 @@ public class GetReleaseTask extends Task {
 		}
 	}
 
-	private void extracted(boolean isFirstAsset, String releaseNumber, boolean isDraft, boolean isPreRelease, boolean thisRelease) {
+	private void logVersionInfo(boolean isFirstAsset, String releaseNumber, boolean isDraft, boolean isPreRelease, boolean thisRelease) {
 		getProject().log(this, 
 				"    version: " + 
 				releaseNumber + ((isDraft)? " [ DRAFT ]" : "") + 

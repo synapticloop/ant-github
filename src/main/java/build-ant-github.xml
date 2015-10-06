@@ -25,11 +25,11 @@
 	<!--
 	  At this point the following will download the release from the github repo below.
 	    Note:
-	      if now 'version' attribute is added, the version is set to 'latest'
+	      if no 'version' attribute is added, the version is set to 'latest'
 	  -->
 	
 	<target name="download-dependencies">
-		<github:get-release owner="synapticloop" repo="ant-github" asset="ant-github.jar" outDir="lib/util/" />
+		<github:get-release owner="synapticloop" repo="ant-github" asset="ant-github.jar" outDir="lib/util/" version="latest" overwrite="true" />
 	</target>
 </project>
 	
