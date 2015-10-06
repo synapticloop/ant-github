@@ -12,7 +12,12 @@ import org.json.JSONObject;
 import synapticloop.github.ant.util.HttpHelper;
 
 public class GetReleaseTask extends Task {
-	private static final String BROWSER_DOWNLOAD_URL = "browser_download_url";
+
+	private static final String GITHUB_API_REPOS = "https://api.github.com/repos/";
+
+	private static final String JSON_KEY_BROWSER_DOWNLOAD_URL = "browser_download_url";
+	private static final String JSON_KEY_NAME = "name";
+	private static final String JSON_KEY_ASSETS = "assets";
 
 	// the owner of the github reporitories
 	private String owner = null;
@@ -30,6 +35,84 @@ public class GetReleaseTask extends Task {
 	// the shortname for logging
 	private String details = null;
 
+	// whether we are using the latest tag
+	private boolean useLatest = false;
+
+	/**
+	 * List all of the releases for a file - marking out the version that will be 
+	 * downloaded, whether it is a draft and/or a pre-release
+	 */
+	private void listReleases() {
+		String url = GITHUB_API_REPOS + owner + "/" + repo + "/releases";
+
+		try {
+			String urlContents = HttpHelper.getUrlContents(url);
+
+			JSONArray jsonArray = new JSONArray(urlContents);
+
+			int releasesLength = jsonArray.length();
+
+			int maxPrintReleases = 5;
+			// only list the last 5 releases
+			if(releasesLength <= 5) {
+				maxPrintReleases = releasesLength;
+			}
+
+			getProject().log(this, "[ " + releasesLength + " ] release" + ((releasesLength != 1)? "s" : "") + " found in GitHub repository '" + owner + "/" + repo + "'.", Project.MSG_ERR);
+
+
+			boolean isFirstAsset = true;
+			for (int i = 0; i < releasesLength; i++) {
+				JSONObject jsonObject = jsonArray.getJSONObject(i);
+				String releaseNumber = jsonObject.getString("tag_name");
+				boolean isDraft = jsonObject.getBoolean("draft");
+				boolean isPreRelease = jsonObject.getBoolean("prerelease");
+
+				JSONArray assetsArray = jsonObject.getJSONArray(JSON_KEY_ASSETS);
+
+				for(int j = 0; j < assetsArray.length(); j++) {
+					JSONObject assetObject = assetsArray.getJSONObject(j);
+					String name = assetObject.getString(JSON_KEY_NAME);
+
+					if(name.equals(asset)) {
+						// this is the one we want
+
+						// is this the requested asset (for non-'latest') releases
+						boolean thisRelease = version.endsWith(releaseNumber);
+
+						if(i < maxPrintReleases) {
+							extracted(isFirstAsset, releaseNumber, isDraft, isPreRelease, thisRelease);
+						} else if(thisRelease) {
+							getProject().log(this, "    ...", Project.MSG_ERR);
+
+							extracted(isFirstAsset, releaseNumber, isDraft, isPreRelease, thisRelease);
+						}
+
+
+						if(!isDraft && !isPreRelease) {
+							isFirstAsset = false;
+						}
+						break;
+					}
+				}
+			}
+
+		} catch (IOException ioex) {
+			throw new BuildException("Could not list releases from '" + url + "'.", ioex);
+		}
+	}
+
+	private void extracted(boolean isFirstAsset, String releaseNumber, boolean isDraft, boolean isPreRelease, boolean thisRelease) {
+		getProject().log(this, 
+				"    version: " + 
+				releaseNumber + ((isDraft)? " [ DRAFT ]" : "") + 
+				((isPreRelease)? " [ PRERELEASE ]" : "") +  
+				((isFirstAsset && !isDraft && !isPreRelease)? " <-- [ LATEST ]" : "") + 
+				((useLatest && isFirstAsset)? " [ REQUESTED ] ": "") + 
+				((!isFirstAsset && thisRelease)? " <-- [ REQUESTED ] ": ""), 
+				Project.MSG_ERR);
+	}
+
 	@Override
 	public void execute() throws BuildException {
 		checkParameter("owner", owner);
@@ -39,10 +122,13 @@ public class GetReleaseTask extends Task {
 		if(null == version || version.trim().length() == 0) {
 			getProject().log(this, "[ " + owner + "/" + repo + " " + asset + " ] No version set, using version 'latest'", Project.MSG_INFO);
 			version = "latest";
+			useLatest = true;
 		} else {
 			// we need to get the version from the tagged release
 			version = "tags/" + version;
 		}
+
+		listReleases();
 
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("[ ");
@@ -60,22 +146,22 @@ public class GetReleaseTask extends Task {
 
 		checkParameter("outDir", outDir);
 
-		String url = "https://api.github.com/repos/" + owner + "/" + repo + "/releases/" + version;
+		String url = GITHUB_API_REPOS + owner + "/" + repo + "/releases/" + version;
 
 		String downloadableAssetUrl = null;
 
 		try {
 			JSONObject jsonObject = new JSONObject(HttpHelper.getUrlContents(url));
-			JSONArray jsonArray = jsonObject.getJSONArray("assets");
+			JSONArray jsonArray = jsonObject.getJSONArray(JSON_KEY_ASSETS);
 			if(jsonArray.length() == 0) {
 				throw new BuildException("There were no assets in the release version '" + version + "'");
 			} else {
 				for(int i = 0; i < jsonArray.length(); i++) {
 					JSONObject assetObject = jsonArray.getJSONObject(i);
-					String name = assetObject.getString("name");
+					String name = assetObject.getString(JSON_KEY_NAME);
 					if(name.equals(asset)) {
 						// this is the one we want
-						downloadableAssetUrl = assetObject.getString(BROWSER_DOWNLOAD_URL);
+						downloadableAssetUrl = assetObject.getString(JSON_KEY_BROWSER_DOWNLOAD_URL);
 						break;
 					}
 				}
@@ -98,13 +184,13 @@ public class GetReleaseTask extends Task {
 					logAndThrow("Output directory '" + outputDirectory.getPath() + "', exists, but is not a directory, please remove this file.");
 				}
 
-				File outputFile = new File(outputDirectory.getPath() + File.separatorChar+ asset);
+				File outputFile = new File(outputDirectory.getPath() + File.separatorChar + asset);
 				if(outputFile.exists() && !overwrite) {
-					logAndThrow("File '" + outputFile.getName() + "' already exists, please delete this file or use the overwrite=\"true\" attribute on this task.");
+					getProject().log(this, "File '" + outputFile.getName() + "' already exists, please delete this file or use the overwrite=\"true\" attribute on this task.", Project.MSG_WARN);
+				} else {
+					HttpHelper.writeUrlToFile(downloadableAssetUrl, outputFile);
+					getProject().log(this, details + "Successfully downloaded release -> " + outputFile.getPath(), Project.MSG_INFO);
 				}
-
-				HttpHelper.writeUrlToFile(downloadableAssetUrl, outputFile);
-				getProject().log(this, details + "Successfully downloaded release " + owner + "/" + repo + "/" + version + "/" + asset + " -> " + outputFile.getPath(), Project.MSG_INFO);
 			} else {
 				throw new BuildException("Could not find a downloadable asset for '" + asset + "'.");
 			}
@@ -114,12 +200,27 @@ public class GetReleaseTask extends Task {
 		}
 	}
 
+	/**
+	 * Check that a parameter is not null and not an empty string
+	 * 
+	 * @param name the parameter name to check (used for help message)
+	 * @param parameter the parameter value to be checked
+	 * 
+	 * @throws BuildException if the parameter value is not correct
+	 */
 	private void checkParameter(String name, String parameter) throws BuildException {
 		if(null == parameter || parameter.trim().length() == 0) {
 			logAndThrow("Task parameter '" + name + "', was not provided, failing...");
 		}
 	}
 
+	/**
+	 * Log a message and throw a BuildException
+	 * 
+	 * @param message the message to output
+	 * 
+	 * @throws BuildException the build exception
+	 */
 	private void logAndThrow(String message) throws BuildException {
 		getProject().log(this, details +  message, Project.MSG_ERR);
 		throw new BuildException(message);
