@@ -119,7 +119,7 @@ public class GetReleaseTask extends Task {
 		checkParameter("repo", repo);
 		checkParameter("asset", asset);
 
-		if(null == version || version.trim().length() == 0) {
+		if(null == version || version.trim().length() == 0 || "latest".equals(version)) {
 			getProject().log(this, "[ " + owner + "/" + repo + " " + asset + " ] No version set, using version 'latest'", Project.MSG_INFO);
 			version = "latest";
 			useLatest = true;
